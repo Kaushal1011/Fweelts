@@ -12,7 +12,7 @@ def bulk_json_data(json_list, _index):
         # if '{"index"' not in doc:
         yield {
             "_index": _index,
-            "_type": "document",
+            "_type": "_doc",
             "_source": doc
         }
 

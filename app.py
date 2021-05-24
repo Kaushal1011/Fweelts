@@ -21,7 +21,7 @@ app.layout = html.Div([
               Input('submit-button-state', 'n_clicks'),
               State('input-1-state', 'value'))
 def update_output(n_clicks, input1):
-    # es_delete()
+    es_delete()
     tweets = search_tweets(input1)
     output = 'NEW TWEET'.join(tweet['full_text'] for tweet in tweets)
     # print(es_index(tweets[0]))
