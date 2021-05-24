@@ -21,4 +21,4 @@ class CustomStreamListener(tweepy.StreamListener):
         return True # Don't kill the stream
 
 sapi = tweepy.streaming.Stream(auth, CustomStreamListener())    
-sapi.filter(locations=[-6.38,49.87,1.77,55.81])
+sapi.filter(track=["covid"])
