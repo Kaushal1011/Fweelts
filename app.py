@@ -3,6 +3,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
+from elastic import *
 from twitter import *
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -21,7 +22,9 @@ app.layout = html.Div([
               State('input-1-state', 'value'))
 def update_output(n_clicks, input1):
     tweets = search_tweets(input1)
-    output = 'NEW TWEET'.join(tweet.full_text for tweet in tweets)
+    output = 'NEW TWEET'.join(tweet['full_text'] for tweet in tweets)
+    # print(es_index(tweets[0]))
+    es_bulk_index(tweets)
     # for tweet in tweets:
     #     print(tweet.text)
     return(output)
