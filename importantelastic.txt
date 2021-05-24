@@ -1,0 +1,113 @@
+PUT tweet/_mapping/
+{
+  "properties": {
+    "full_text": { 
+      "type":     "text",
+      "fielddata": true
+    }
+  }
+}
+
+PUT tweet_v2/_mapping/
+{
+  "properties": {
+    "text": { 
+      "type":     "text",
+      "fielddata": true
+    }
+  }
+}
+
+GET tweet_v2/_search
+{
+  "size" : 100,
+  "query": {
+    "match":{
+      "tweet.text": {
+        "query": "Python", 
+        "analyzer": "stop"
+      }
+    }
+  },
+  "_source": "tweet.text",
+  "aggs": {
+        "keywords": {
+            "significant_text": {
+                "field": "tweet.text"
+                , "size": 25
+            }},
+        "keywords2":{
+            "significant_text": {
+                "field": "tweet.text.keyword"
+                , "size": 25
+            }
+        }
+    }
+  
+}
+
+
+
+PUT tweet
+{
+  "settings": {
+        "analysis": {
+            "analyzer": {
+                "standard": {
+                    "type": "standard",
+                    "stopwords": "_english_"
+                }
+            }
+        }
+    }
+}
+
+GET tweet/_search
+{
+  "query": {
+    "match":{
+      "full_text": {
+        "query": "Python", 
+        "analyzer": "stop"
+      }
+    }
+  },
+  "_source": "full_text",
+  "aggs": {
+        "keywords": {
+            "significant_text": {
+                "field": "full_text"
+                , "size": 25
+            }},
+        "keywords2":{
+            "significant_text": {
+                "field": "full_text.keyword"
+                , "size": 25
+            }
+        }
+    }
+  
+}
+
+GET tweet/_search
+{
+  "query": {
+    "match_all":{
+    }
+  },
+  "_source": "full_text",
+  "aggs": {
+        "keywords": {
+            "significant_text": {
+                "field": "full_text.keyword"
+                , "size": 25
+            }},
+        "keywords2":{
+          "terms": {
+            "field": "full_text",
+            "size": 25
+          }
+        }
+    }
+  
+}
