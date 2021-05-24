@@ -10,3 +10,5 @@ tweepy==3.10.0
 urllib3==1.26.4
 transformers==4.6.1
 tensorflow==2.4.1
+uvicorn==0.13.3
+fastapi==0.63.0
