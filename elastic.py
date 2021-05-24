@@ -24,3 +24,6 @@ def es_bulk_index(data):
         # print ("\nbulk_json_data() RESPONSE:", response)
     except Exception as e:
         print("\nERROR:", e)
+
+def es_delete():
+    es.delete_by_query(index="tweet", body={"query": {"match_all": {}}})
