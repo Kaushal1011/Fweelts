@@ -512,7 +512,7 @@ def update_output(n_clicks, input1):
 
     for i in response.json()["data"][0]:
         finsent_count[i["label"]] += 1
-    print(fin_sent)
+
     fin_arr = []
     for k, v in finsent_count.items():
         fin_arr.append([k, v])
