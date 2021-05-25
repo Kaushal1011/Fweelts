@@ -1,0 +1,18 @@
+POST tweet_v2/_search
+{
+    "size":0,
+    "aggs":{
+        "sentiment_over_source":{
+            "terms":{
+                "field":"tweet.source.keyword"
+            },
+        "aggs":{
+            "source_sentiment":{
+                "avg":{
+                    "field":"tweet.sentiment.score"
+                }
+            }
+        }
+        }
+    }
+}
