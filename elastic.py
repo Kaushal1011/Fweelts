@@ -40,3 +40,14 @@ def es_delete():
     es.indices.delete(index='tweet_v2', ignore=[400, 404])
     es.delete_by_query(index="tweet", body={
                        "query": {"match_all": {}}}, ignore=[400, 404])
+
+
+def es_update(id, body, sentiment):
+    value = 0
+    if sentiment["label"] == "POSITIVE":
+        value = sentiment["score"]-0.5
+    else:
+        value = sentiment["score"]+0.5
+    body["tweet"]["sentiment"] = sentiment
+    body["tweet"]["sentimentscore"] = value
+    es.index(index="tweet_v2", id=id, body=body)
