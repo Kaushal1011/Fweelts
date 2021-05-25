@@ -106,9 +106,11 @@ def update_output(n_clicks, input1):
              for word in res["aggregations"]["keywords"]["buckets"]]
 
     # Word Cloud Processing
-
-    keywords_with_counts = Counter(keywords)
-    keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
+    keywords_wordcloud = []
+    for k, s in zip(keywords,score):
+        keywords_wordcloud.append({"text" : k, "value" : s})
+    # keywords_with_counts = Counter(keywords)
+    # keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
 
     # wc_dict = {}
     # for i in range(len(keywords)):
