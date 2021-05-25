@@ -59,3 +59,6 @@ python3 app.py
 - Go to `localhost:8050`
 
 Models courtesy - [Hugging Face](https://huggingface.co/)
+
+## Demo video
+See it in action on [YouTube](https://youtu.be/eIp2K6CeRc0)
