@@ -48,7 +48,9 @@ app.layout = dbc.Container([
         dbc.Col(dcc.Input(id='input-2-state', type='text', placeholder="Word Relation Analyser"),width=3),
         dbc.Col(html.Button(id='wr-submit',  n_clicks=0, children='Analyse Word Relation'),width=3),
     ], align="center"),
-    # html.Div(id='output-state'),
+    dbc.Row([
+        dbc.Col(html.Div(id='output-state')),
+    ]),
     # html.Div(id='output-state2'),
     dbc.Row(
         [
