@@ -1,5 +1,8 @@
 # fweelts
 
+## Demo video
+See it in action on [YouTube](https://youtu.be/eIp2K6CeRc0)
+
 ## Inspiration
 Twitter 🐦 API is a powerful resource of information 💾. We thought that Elastic search can definitely do cool stuff with this type of data. 🤓 We mixed in some of our data science knowledge and decided to create a web app that fetches sentiment and emotion-related data of tweets.
 
@@ -60,5 +63,4 @@ python3 app.py
 
 Models courtesy - [Hugging Face](https://huggingface.co/)
 
-## Demo video
-See it in action on [YouTube](https://youtu.be/eIp2K6CeRc0)
+
