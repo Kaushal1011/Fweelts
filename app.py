@@ -7,6 +7,11 @@ from elastic import *
 from twitter import *
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import dash_d3cloud
+from collections import Counter
 # from state import sentiment_count, emotion_count
 # from sentiment import sentiment_classifier
 
@@ -37,7 +42,14 @@ app.layout = html.Div([
               placeholder="Word Relation Analyser"),
     html.Button(id='wr-submit',  n_clicks=0, children='Analyse Word Relation'),
     html.Div(id='output-state'),
-    html.Div(id='output-state2')
+    html.Div(id='output-state2'),
+    dcc.Graph(id="positive-negative-pie"),
+    dcc.Graph(id="emotion-pie"),
+    dash_d3cloud.WordCloud(
+        id='wordcloud',
+        words=[{"text" : 'wordcloud', "value" : 20}, {"text" : 'will', "value" : 15}, {"text" : 'appear', "value" : 15}, {"text" : 'here', "value" : 15}],
+        options={}
+    )            
 ])
 
 
@@ -53,8 +65,10 @@ def update_output(n_clicks, input1):
     es_add(tweets)
     return("Added Tweets to Elastic {}".format(n_clicks))
 
-
-@app.callback(Output('output-state2', 'children'),
+# Output('output-state2', 'children'),
+@app.callback(Output('positive-negative-pie', 'figure'),
+                Output('emotion-pie', 'figure'),
+                Output('wordcloud', 'words'),
               Input('analyse-submit', 'n_clicks'),
               State('input-1-state', 'value'))
 def update_output(n_clicks, input1):
@@ -93,18 +107,21 @@ def update_output(n_clicks, input1):
 
     # Word Cloud Processing
 
-    wc_dict = {}
-    for i in range(len(keywords)):
-        wc_dict[keywords[i]] = score[i]
+    keywords_with_counts = Counter(keywords)
+    keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
 
-    wordcloud = WordCloud(
-        width=500, height=500).generate_from_frequencies(wc_dict)
-    plt.figure(figsize=(15, 8))
-    plt.imshow(wordcloud)
-    plt.axis("off")
-    # plt.show()
-    plt.savefig('yourfile.png', bbox_inches='tight')
-    plt.close()
+    # wc_dict = {}
+    # for i in range(len(keywords)):
+    #     wc_dict[keywords[i]] = score[i]
+
+    # wordcloud = WordCloud(
+    #     width=500, height=500).generate_from_frequencies(wc_dict)
+    # plt.figure(figsize=(15, 8))
+    # plt.imshow(wordcloud)
+    # plt.axis("off")
+    # # plt.show()
+    # plt.savefig('yourfile.png', bbox_inches='tight')
+    # plt.close()
 
     # sentiment processing
 
@@ -127,6 +144,9 @@ def update_output(n_clicks, input1):
     }
     for i in response.json()["data"][0]:
         sentiment_count[i["label"]] += 1
+    df = pd.DataFrame(np.array([['POSITIVE', sentiment_count['POSITIVE']], ['NEGATIVE', sentiment_count['NEGATIVE']]]), columns=['sentiment', 'count'])
+    print(df)
+    pos_neg_pie = px.pie(df, values='count', names='sentiment')
 
     print(sentiment_count)
 
@@ -157,8 +177,14 @@ def update_output(n_clicks, input1):
     for i in response.json()["data"][0]:
         emotion_count[i["label"]] += 1
 
+    emotion_arr = []
+    for k, v in emotion_count.items():  
+        emotion_arr.append([k, v])
+    df = pd.DataFrame(np.array(emotion_arr), columns=['emotion', 'count'])
+    emotion_pie = px.pie(df, values='count', names='emotion')
     print(emotion_count)
 
+    return pos_neg_pie, emotion_pie, keywords_wordcloud
 
 if __name__ == '__main__':
     app.run_server(debug=True)
