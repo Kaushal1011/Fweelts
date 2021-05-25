@@ -47,9 +47,10 @@ app.layout = html.Div([
     dcc.Graph(id="emotion-pie"),
     dash_d3cloud.WordCloud(
         id='wordcloud',
-        words=[{"text" : 'wordcloud', "value" : 20}, {"text" : 'will', "value" : 15}, {"text" : 'appear', "value" : 15}, {"text" : 'here', "value" : 15}],
+        words=[{"text": 'wordcloud', "value": 20}, {"text": 'will', "value": 15}, {
+            "text": 'appear', "value": 15}, {"text": 'here', "value": 15}],
         options={}
-    )            
+    )
 ])
 
 
@@ -66,9 +67,11 @@ def update_output(n_clicks, input1):
     return("Added Tweets to Elastic {}".format(n_clicks))
 
 # Output('output-state2', 'children'),
+
+
 @app.callback(Output('positive-negative-pie', 'figure'),
-                Output('emotion-pie', 'figure'),
-                Output('wordcloud', 'words'),
+              Output('emotion-pie', 'figure'),
+              Output('wordcloud', 'words'),
               Input('analyse-submit', 'n_clicks'),
               State('input-1-state', 'value'))
 def update_output(n_clicks, input1):
@@ -87,11 +90,11 @@ def update_output(n_clicks, input1):
         "aggs": {
             "keywords": {
                 "significant_text": {
-                    "field": "tweet.text", "size": 25
+                    "field": "tweet.text", "size": 50
                 }},
             "keywords2": {
                 "significant_text": {
-                    "field": "tweet.text.keyword", "size": 25
+                    "field": "tweet.text.keyword", "size": 30
                 }
             }
         }}, ignore=[400, 404])
@@ -107,8 +110,9 @@ def update_output(n_clicks, input1):
 
     # Word Cloud Processing
     keywords_wordcloud = []
-    for k, s in zip(keywords,score):
-        keywords_wordcloud.append({"text" : k, "value" : s})
+    for k, s in zip(keywords, score):
+        if k != input1:
+            keywords_wordcloud.append({"text": k, "value": int(s**0.25)+1})
     # keywords_with_counts = Counter(keywords)
     # keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
 
@@ -146,7 +150,8 @@ def update_output(n_clicks, input1):
     }
     for i in response.json()["data"][0]:
         sentiment_count[i["label"]] += 1
-    df = pd.DataFrame(np.array([['POSITIVE', sentiment_count['POSITIVE']], ['NEGATIVE', sentiment_count['NEGATIVE']]]), columns=['sentiment', 'count'])
+    df = pd.DataFrame(np.array([['POSITIVE', sentiment_count['POSITIVE']], [
+                      'NEGATIVE', sentiment_count['NEGATIVE']]]), columns=['sentiment', 'count'])
     print(df)
     pos_neg_pie = px.pie(df, values='count', names='sentiment')
 
@@ -180,13 +185,14 @@ def update_output(n_clicks, input1):
         emotion_count[i["label"]] += 1
 
     emotion_arr = []
-    for k, v in emotion_count.items():  
+    for k, v in emotion_count.items():
         emotion_arr.append([k, v])
     df = pd.DataFrame(np.array(emotion_arr), columns=['emotion', 'count'])
     emotion_pie = px.pie(df, values='count', names='emotion')
     print(emotion_count)
 
     return pos_neg_pie, emotion_pie, keywords_wordcloud
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
