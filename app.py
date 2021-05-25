@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import dash
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
@@ -29,27 +30,41 @@ def query(payload):
     return json.loads(response.content.decode("utf-8"))
 
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.layout = html.Div([
-    dcc.Input(id='input-1-state', type='text', value='COVID-19'),
-    html.Button(id='submit-button-state', n_clicks=0, children='Submit'),
-    html.Button(id='analyse-submit',  n_clicks=0, children='Analyse'),
-    html.Button(id='delete-submit',  n_clicks=0, children='Delete'),
-    dcc.Input(id='input-2-state', type='text',
-              placeholder="Word Relation Analyser"),
-    html.Button(id='wr-submit',  n_clicks=0, children='Analyse Word Relation'),
-    html.Div(id='output-state'),
-    html.Div(id='output-state2'),
-    dcc.Graph(id="positive-negative-pie"),
-    dcc.Graph(id="emotion-pie"),
-    dash_d3cloud.WordCloud(
-        id='wordcloud',
-        words=[{"text" : 'wordcloud', "value" : 20}, {"text" : 'will', "value" : 15}, {"text" : 'appear', "value" : 15}, {"text" : 'here', "value" : 15}],
-        options={}
-    )            
+app.layout = dbc.Container([
+    html.Br(),
+    html.Br(),
+    dbc.Row([
+        dbc.Col(dcc.Input(id='input-1-state', type='text', value='COVID-19'),width=3),
+        dbc.Col(html.Button(id='submit-button-state', n_clicks=0, children='Submit'),width=3),
+        dbc.Col(html.Button(id='analyse-submit',  n_clicks=0, children='Analyse'),width=3),
+        dbc.Col(html.Button(id='delete-submit',  n_clicks=0, children='Delete'),width=3),
+    ], align="center"),
+    html.Br(),
+    dbc.Row([
+        dbc.Col(dcc.Input(id='input-2-state', type='text', placeholder="Word Relation Analyser"),width=3),
+        dbc.Col(html.Button(id='wr-submit',  n_clicks=0, children='Analyse Word Relation'),width=3),
+    ], align="center"),
+    # html.Div(id='output-state'),
+    # html.Div(id='output-state2'),
+    dbc.Row(
+        [
+            dbc.Col(dcc.Graph(id="positive-negative-pie"),width=6),
+            dbc.Col(dcc.Graph(id="emotion-pie"), width=6),
+        ]
+    ),
+    dbc.Row(
+        [
+            dbc.Col(dash_d3cloud.WordCloud(
+            id='wordcloud',
+            words=[{"text" : 'wordcloud', "value" : 20}, {"text" : 'will', "value" : 15}, {"text" : 'appear', "value" : 15}, {"text" : 'here', "value" : 15}],
+            options={"scale" : "log"}
+            ), width=6),        
+        ], align="baseline"
+    ),
 ])
 
 
