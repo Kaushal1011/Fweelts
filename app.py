@@ -92,8 +92,8 @@ app.layout = dbc.Container([
     ),
     dbc.Row(
         [
-            dbc.Col(dcc.Graph(id="twsent-pie-wr"), width=6),
-            dbc.Col(dcc.Graph(id="finsent-pie-wr"), width=6),
+            dbc.Col(dcc.Graph(id="twsent-pie-wa"), width=6),
+            dbc.Col(dcc.Graph(id="finsent-pie-wa"), width=6),
         ]
     ),
     dbc.Row(
@@ -127,6 +127,8 @@ def update_output(n_clicks, input1):
 @app.callback(Output('positive-negative-pie', 'figure'),
               Output('emotion-pie', 'figure'),
               Output('wordcloud', 'words'),
+              Output('twsent-pie', 'figure'),
+              Output('finsent-pie', 'figure'),
               Output('source-bar', 'figure'),
               Input('analyse-submit', 'n_clicks'),
               State('input-1-state', 'value'))
@@ -168,21 +170,6 @@ def update_output(n_clicks, input1):
     for k, s in zip(keywords, score):
         if k != input1:
             keywords_wordcloud.append({"text": k, "value": int(s**0.25)+1})
-    # keywords_with_counts = Counter(keywords)
-    # keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
-
-    # wc_dict = {}
-    # for i in range(len(keywords)):
-    #     wc_dict[keywords[i]] = score[i]
-
-    # wordcloud = WordCloud(
-    #     width=500, height=500).generate_from_frequencies(wc_dict)
-    # plt.figure(figsize=(15, 8))
-    # plt.imshow(wordcloud)
-    # plt.axis("off")
-    # # plt.show()
-    # plt.savefig('yourfile.png', bbox_inches='tight')
-    # plt.close()
 
     # sentiment processing
 
@@ -251,6 +238,68 @@ def update_output(n_clicks, input1):
     emotion_pie = px.pie(df, values='count', names='emotion')
     print(emotion_count)
 
+    # Twitter sentiment pie
+
+    url = "http://localhost:8000/twsent"
+
+    payload = json.dumps({
+        "textlist": tweettext
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'csrftoken=Cu0qDKmbrZNCk1yDORM52IrPx9ylB8fmdiKrFrrqXTf0qt67BgL67h71q0aqR2zM'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    # Process emotion data here
+    twsent_count = {
+        "LABEL_0": 0,
+        "LABEL_1": 0,
+        "LABEL_2": 0,
+    }
+
+    for i in response.json()["data"][0]:
+        twsent_count[i["label"]] += 1
+
+    twsent_count["Positive"] = twsent_count.pop("LABEL_2")
+    twsent_count["Neutral"] = twsent_count.pop("LABEL_1")
+    twsent_count["Negative"] = twsent_count.pop("LABEL_0")
+
+    tw_arr = []
+    for k, v in twsent_count.items():
+        tw_arr.append([k, v])
+    df = pd.DataFrame(np.array(tw_arr), columns=['sentiment', 'count'])
+    tw_pie = px.pie(df, values='count', names='sentiment')
+
+    # Financial Sentiment
+    url = "http://localhost:8000/finsent"
+
+    payload = json.dumps({
+        "textlist": tweettext
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'csrftoken=Cu0qDKmbrZNCk1yDORM52IrPx9ylB8fmdiKrFrrqXTf0qt67BgL67h71q0aqR2zM'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    # Process emotion data here
+    finsent_count = {
+        "positive": 0,
+        "negative": 0,
+        "neutral": 0,
+    }
+
+    for i in response.json()["data"][0]:
+        finsent_count[i["label"]] += 1
+
+    fin_arr = []
+    for k, v in finsent_count.items():
+        tw_arr.append([k, v])
+    df = pd.DataFrame(np.array(fin_arr), columns=['fin sentiment', 'count'])
+    fin_pie = px.pie(df, values='count', names='fin sentiment')
     # Tweet Source Analysis
     # res = es.search(index="tweet_v2", body={
     #     "query": {
@@ -286,13 +335,15 @@ def update_output(n_clicks, input1):
     # print(res["aggregations"]["buckets"])
     # print(df)
     source_bar = px.bar(df, x='key', y='doc_count')
-    return pos_neg_pie, emotion_pie, keywords_wordcloud, source_bar
+    return pos_neg_pie, emotion_pie, tw_pie, fin_pie, keywords_wordcloud, source_bar
 
 # Word relation analyse
 
 
 @app.callback(Output('positive-negative-pie-wa', 'figure'),
               Output('emotion-pie-wa', 'figure'),
+              Output('twsent-pie-wa', 'figure'),
+              Output('finsent-pie-wa', 'figure'),
               Output('wordcloud-wa', 'words'),
               Input('wr-submit', 'n_clicks'),
               State('input-2-state', 'value'))
@@ -334,21 +385,6 @@ def update_output(n_clicks, input1):
     for k, s in zip(keywords, score):
         if k != input1:
             keywords_wordcloud.append({"text": k, "value": int(s**0.25)+1})
-    # keywords_with_counts = Counter(keywords)
-    # keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
-
-    # wc_dict = {}
-    # for i in range(len(keywords)):
-    #     wc_dict[keywords[i]] = score[i]
-
-    # wordcloud = WordCloud(
-    #     width=500, height=500).generate_from_frequencies(wc_dict)
-    # plt.figure(figsize=(15, 8))
-    # plt.imshow(wordcloud)
-    # plt.axis("off")
-    # # plt.show()
-    # plt.savefig('yourfile.png', bbox_inches='tight')
-    # plt.close()
 
     # sentiment processing
 
@@ -417,7 +453,70 @@ def update_output(n_clicks, input1):
     emotion_pie_wa = px.pie(df, values='count', names='emotion')
     print(emotion_count)
 
-    return pos_neg_pie_wa, emotion_pie_wa, keywords_wordcloud
+    # Twitter sentiment pie
+
+    url = "http://localhost:8000/twsent"
+
+    payload = json.dumps({
+        "textlist": tweettext
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'csrftoken=Cu0qDKmbrZNCk1yDORM52IrPx9ylB8fmdiKrFrrqXTf0qt67BgL67h71q0aqR2zM'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    # Process emotion data here
+    twsent_count = {
+        "LABEL_0": 0,
+        "LABEL_1": 0,
+        "LABEL_2": 0,
+    }
+
+    for i in response.json()["data"][0]:
+        twsent_count[i["label"]] += 1
+
+    twsent_count["Positive"] = twsent_count.pop("LABEL_2")
+    twsent_count["Neutral"] = twsent_count.pop("LABEL_1")
+    twsent_count["Negative"] = twsent_count.pop("LABEL_0")
+
+    tw_arr = []
+    for k, v in twsent_count.items():
+        tw_arr.append([k, v])
+    df = pd.DataFrame(np.array(tw_arr), columns=['sentiment', 'count'])
+    tw_pie = px.pie(df, values='count', names='sentiment')
+
+    # Financial Sentiment
+    url = "http://localhost:8000/finsent"
+
+    payload = json.dumps({
+        "textlist": tweettext
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'csrftoken=Cu0qDKmbrZNCk1yDORM52IrPx9ylB8fmdiKrFrrqXTf0qt67BgL67h71q0aqR2zM'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    # Process emotion data here
+    finsent_count = {
+        "positive": 0,
+        "negative": 0,
+        "neutral": 0,
+    }
+
+    for i in response.json()["data"][0]:
+        finsent_count[i["label"]] += 1
+
+    fin_arr = []
+    for k, v in finsent_count.items():
+        tw_arr.append([k, v])
+    df = pd.DataFrame(np.array(fin_arr), columns=['fin sentiment', 'count'])
+    fin_pie = px.pie(df, values='count', names='fin sentiment')
+
+    return pos_neg_pie_wa, emotion_pie_wa, tw_pie, fin_pie, keywords_wordcloud
 
 
 if __name__ == '__main__':

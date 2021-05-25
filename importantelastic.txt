@@ -111,3 +111,20 @@ GET tweet/_search
     }
   
 }
+
+
+    # keywords_with_counts = Counter(keywords)
+    # keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
+
+    # wc_dict = {}
+    # for i in range(len(keywords)):
+    #     wc_dict[keywords[i]] = score[i]
+
+    # wordcloud = WordCloud(
+    #     width=500, height=500).generate_from_frequencies(wc_dict)
+    # plt.figure(figsize=(15, 8))
+    # plt.imshow(wordcloud)
+    # plt.axis("off")
+    # # plt.show()
+    # plt.savefig('yourfile.png', bbox_inches='tight')
+    # plt.close()
