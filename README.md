@@ -57,3 +57,5 @@ python3 sentimentserver/main.py
 python3 app.py
 ```
 - Go to `localhost:8050`
+
+Models courtesy - [Hugging Face](https://huggingface.co/)
