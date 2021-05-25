@@ -67,6 +67,12 @@ app.layout = dbc.Container([
     ),
     dbc.Row(
         [
+            dbc.Col(dcc.Graph(id="twsent-pie"), width=6),
+            dbc.Col(dcc.Graph(id="finsent-pie"), width=6),
+        ]
+    ),
+    dbc.Row(
+        [
             dbc.Col(dash_d3cloud.WordCloud(
                 id='wordcloud',
                 words=[{"text": 'wordcloud', "value": 20}, {"text": 'will', "value": 15}, {
@@ -76,9 +82,18 @@ app.layout = dbc.Container([
         ], align="baseline"
     ),
     dbc.Row(
+        [dbc.Col(dcc.Graph(id="source-bar"), width=12), ]
+    ),
+    dbc.Row(
         [
             dbc.Col(dcc.Graph(id="positive-negative-pie-wa"), width=6),
             dbc.Col(dcc.Graph(id="emotion-pie-wa"), width=6),
+        ]
+    ),
+    dbc.Row(
+        [
+            dbc.Col(dcc.Graph(id="twsent-pie-wr"), width=6),
+            dbc.Col(dcc.Graph(id="finsent-pie-wr"), width=6),
         ]
     ),
     dbc.Row(
@@ -112,6 +127,7 @@ def update_output(n_clicks, input1):
 @app.callback(Output('positive-negative-pie', 'figure'),
               Output('emotion-pie', 'figure'),
               Output('wordcloud', 'words'),
+              Output('source-bar', 'figure'),
               Input('analyse-submit', 'n_clicks'),
               State('input-1-state', 'value'))
 def update_output(n_clicks, input1):
@@ -235,7 +251,42 @@ def update_output(n_clicks, input1):
     emotion_pie = px.pie(df, values='count', names='emotion')
     print(emotion_count)
 
-    return pos_neg_pie, emotion_pie, keywords_wordcloud
+    # Tweet Source Analysis
+    # res = es.search(index="tweet_v2", body={
+    #     "query": {
+    #         "match_all": {}
+    #     },
+    #     "_source" : {
+    #         "includes" : [
+    #         "tweet.source"
+    #         ]
+    #     },
+    #     "size" : 100
+    # }, ignore=[400, 404])
+    # source_count = Counter(res["_source"]["tweet"]["source"])
+    # print(source_count)
+
+    res = es.search(index="tweet_v2", body={
+        "query": {
+            "match_all": {}
+        },
+        "aggs": {
+            "keywords": {
+                "terms": {
+                    "field": "tweet.source.keyword",
+                    "size": 50
+                }
+            }
+        },
+        "_source": False
+    }, ignore=[400, 404])
+    # print(res["aggregations"]["keywords"]["buckets"])
+    df = pd.DataFrame.from_dict(res["aggregations"]["keywords"]["buckets"])
+    # print("hi")
+    # print(res["aggregations"]["buckets"])
+    # print(df)
+    source_bar = px.bar(df, x='key', y='doc_count')
+    return pos_neg_pie, emotion_pie, keywords_wordcloud, source_bar
 
 # Word relation analyse
 
