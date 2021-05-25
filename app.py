@@ -176,6 +176,7 @@ def update_output(n_clicks, input1):
         sentiment_count[i["label"]] += 1
         es_update(res["hits"]["hits"][count]["_id"], res["hits"]
                   ["hits"][count]["_source"], i)
+        count += 1
 
     df = pd.DataFrame(np.array([['POSITIVE', sentiment_count['POSITIVE']], [
                       'NEGATIVE', sentiment_count['NEGATIVE']]]), columns=['sentiment', 'count'])

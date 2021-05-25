@@ -47,7 +47,7 @@ def es_update(id, body, sentiment):
     if sentiment["label"] == "POSITIVE":
         value = sentiment["score"]-0.5
     else:
-        value = sentiment["score"]+0.5
+        value = -sentiment["score"]+0.5
     body["tweet"]["sentiment"] = sentiment
     body["tweet"]["sentimentscore"] = value
     es.index(index="tweet_v2", id=id, body=body)
