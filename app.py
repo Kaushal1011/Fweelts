@@ -266,6 +266,8 @@ def update_output(n_clicks, input1):
     twsent_count["Neutral"] = twsent_count.pop("LABEL_1")
     twsent_count["Negative"] = twsent_count.pop("LABEL_0")
 
+    print(twsent_count)
+
     tw_arr = []
     for k, v in twsent_count.items():
         tw_arr.append([k, v])
@@ -296,8 +298,9 @@ def update_output(n_clicks, input1):
         finsent_count[i["label"]] += 1
 
     fin_arr = []
+    print(finsent_count)
     for k, v in finsent_count.items():
-        tw_arr.append([k, v])
+        fin_arr.append([k, v])
     df = pd.DataFrame(np.array(fin_arr), columns=['fin sentiment', 'count'])
     fin_pie = px.pie(df, values='count', names='fin sentiment')
     # Tweet Source Analysis
@@ -480,7 +483,7 @@ def update_output(n_clicks, input1):
     twsent_count["Positive"] = twsent_count.pop("LABEL_2")
     twsent_count["Neutral"] = twsent_count.pop("LABEL_1")
     twsent_count["Negative"] = twsent_count.pop("LABEL_0")
-
+    print(twsent_count)
     tw_arr = []
     for k, v in twsent_count.items():
         tw_arr.append([k, v])
@@ -509,10 +512,10 @@ def update_output(n_clicks, input1):
 
     for i in response.json()["data"][0]:
         finsent_count[i["label"]] += 1
-
+    print(fin_sent)
     fin_arr = []
     for k, v in finsent_count.items():
-        tw_arr.append([k, v])
+        fin_arr.append([k, v])
     df = pd.DataFrame(np.array(fin_arr), columns=['fin sentiment', 'count'])
     fin_pie = px.pie(df, values='count', names='fin sentiment')
 
