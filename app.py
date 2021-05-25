@@ -126,9 +126,9 @@ def update_output(n_clicks, input1):
 
 @app.callback(Output('positive-negative-pie', 'figure'),
               Output('emotion-pie', 'figure'),
-              Output('wordcloud', 'words'),
               Output('twsent-pie', 'figure'),
               Output('finsent-pie', 'figure'),
+              Output('wordcloud', 'words'),
               Output('source-bar', 'figure'),
               Input('analyse-submit', 'n_clicks'),
               State('input-1-state', 'value'))
