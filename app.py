@@ -72,7 +72,23 @@ app.layout = dbc.Container([
                 words=[{"text": 'wordcloud', "value": 20}, {"text": 'will', "value": 15}, {
                     "text": 'appear', "value": 15}, {"text": 'here', "value": 15}],
                 options={"scale": "log"}
-            ), width=6),
+            ), width=12),
+        ], align="baseline"
+    ),
+    dbc.Row(
+        [
+            dbc.Col(dcc.Graph(id="positive-negative-pie-wa"), width=6),
+            dbc.Col(dcc.Graph(id="emotion-pie-wa"), width=6),
+        ]
+    ),
+    dbc.Row(
+        [
+            dbc.Col(dash_d3cloud.WordCloud(
+                id='wordcloud-wa',
+                words=[{"text": 'wordcloud', "value": 20}, {"text": 'will', "value": 15}, {
+                    "text": 'appear', "value": 15}, {"text": 'here', "value": 15}],
+                options={"scale": "log"}
+            ), width=12),
         ], align="baseline"
     ),
 ])
@@ -220,6 +236,137 @@ def update_output(n_clicks, input1):
     print(emotion_count)
 
     return pos_neg_pie, emotion_pie, keywords_wordcloud
+
+# Word relation analyse
+
+
+@app.callback(Output('positive-negative-pie-wa', 'figure'),
+              Output('emotion-pie-wa', 'figure'),
+              Output('wordcloud-wa', 'words'),
+              Input('wr-submit', 'n_clicks'),
+              State('input-2-state', 'value'))
+def update_output(n_clicks, input1):
+
+    res = es.search(index="tweet_v2", body={
+        "size": 100,
+        "query": {
+            "match": {
+                "tweet.text": {
+                    "query": input1,
+                    "analyzer": "stop"
+                }
+            }
+        },
+        "aggs": {
+            "keywords": {
+                "significant_text": {
+                    "field": "tweet.text", "size": 50
+                }},
+            "keywords2": {
+                "significant_text": {
+                    "field": "tweet.text.keyword", "size": 30
+                }
+            }
+        }}, ignore=[400, 404])
+    # print(res)
+    tweettext = [text["_source"]["tweet"]["text"]
+                 for text in res["hits"]["hits"]]
+
+    # call sentiment api
+    keywords = [word["key"]
+                for word in res["aggregations"]["keywords"]["buckets"]]
+    score = [int(10000*word["score"])
+             for word in res["aggregations"]["keywords"]["buckets"]]
+
+    # Word Cloud Processing
+    keywords_wordcloud = []
+    for k, s in zip(keywords, score):
+        if k != input1:
+            keywords_wordcloud.append({"text": k, "value": int(s**0.25)+1})
+    # keywords_with_counts = Counter(keywords)
+    # keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
+
+    # wc_dict = {}
+    # for i in range(len(keywords)):
+    #     wc_dict[keywords[i]] = score[i]
+
+    # wordcloud = WordCloud(
+    #     width=500, height=500).generate_from_frequencies(wc_dict)
+    # plt.figure(figsize=(15, 8))
+    # plt.imshow(wordcloud)
+    # plt.axis("off")
+    # # plt.show()
+    # plt.savefig('yourfile.png', bbox_inches='tight')
+    # plt.close()
+
+    # sentiment processing
+
+    url = "http://localhost:8000/sentiment"
+
+    payload = json.dumps({
+        "textlist": tweettext
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'csrftoken=Cu0qDKmbrZNCk1yDORM52IrPx9ylB8fmdiKrFrrqXTf0qt67BgL67h71q0aqR2zM'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    # proces sentiment values here
+    sentiment_count = {
+        "POSITIVE": 0,
+        "NEGATIVE": 0
+    }
+    count = 0
+    for i in response.json()["data"][0]:
+        sentiment_count[i["label"]] += 1
+        es_update(res["hits"]["hits"][count]["_id"], res["hits"]
+                  ["hits"][count]["_source"], i)
+        count += 1
+
+    df = pd.DataFrame(np.array([['POSITIVE', sentiment_count['POSITIVE']], [
+                      'NEGATIVE', sentiment_count['NEGATIVE']]]), columns=['sentiment', 'count'])
+    print(df)
+    pos_neg_pie_wa = px.pie(df, values='count', names='sentiment')
+
+    print(sentiment_count)
+
+    # Emotion Process
+
+    url = "http://localhost:8000/emotion"
+
+    payload = json.dumps({
+        "textlist": tweettext
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Cookie': 'csrftoken=Cu0qDKmbrZNCk1yDORM52IrPx9ylB8fmdiKrFrrqXTf0qt67BgL67h71q0aqR2zM'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    # Process emotion data here
+    emotion_count = {
+        "sadness": 0,
+        "joy": 0,
+        "love": 0,
+        "anger": 0,
+        "fear": 0,
+        "surprise": 0
+    }
+
+    for i in response.json()["data"][0]:
+        emotion_count[i["label"]] += 1
+
+    emotion_arr = []
+    for k, v in emotion_count.items():
+        emotion_arr.append([k, v])
+    df = pd.DataFrame(np.array(emotion_arr), columns=['emotion', 'count'])
+    emotion_pie_wa = px.pie(df, values='count', names='emotion')
+    print(emotion_count)
+
+    return pos_neg_pie_wa, emotion_pie_wa, keywords_wordcloud
 
 
 if __name__ == '__main__':
