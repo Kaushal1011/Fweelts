@@ -30,7 +30,8 @@ def query(payload):
     return json.loads(response.content.decode("utf-8"))
 
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
+external_stylesheets = [
+    'https://codepen.io/chriddyp/pen/bWLwgP.css', dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -38,15 +39,21 @@ app.layout = dbc.Container([
     html.Br(),
     html.Br(),
     dbc.Row([
-        dbc.Col(dcc.Input(id='input-1-state', type='text', value='COVID-19'),width=3),
-        dbc.Col(html.Button(id='submit-button-state', n_clicks=0, children='Submit'),width=3),
-        dbc.Col(html.Button(id='analyse-submit',  n_clicks=0, children='Analyse'),width=3),
-        dbc.Col(html.Button(id='delete-submit',  n_clicks=0, children='Delete'),width=3),
+        dbc.Col(dcc.Input(id='input-1-state',
+                          type='text', value='COVID-19'), width=3),
+        dbc.Col(html.Button(id='submit-button-state',
+                            n_clicks=0, children='Submit'), width=3),
+        dbc.Col(html.Button(id='analyse-submit',
+                            n_clicks=0, children='Analyse'), width=3),
+        dbc.Col(html.Button(id='delete-submit',
+                            n_clicks=0, children='Delete'), width=3),
     ], align="center"),
     html.Br(),
     dbc.Row([
-        dbc.Col(dcc.Input(id='input-2-state', type='text', placeholder="Word Relation Analyser"),width=3),
-        dbc.Col(html.Button(id='wr-submit',  n_clicks=0, children='Analyse Word Relation'),width=3),
+        dbc.Col(dcc.Input(id='input-2-state', type='text',
+                          placeholder="Word Relation Analyser"), width=3),
+        dbc.Col(html.Button(id='wr-submit',  n_clicks=0,
+                            children='Analyse Word Relation'), width=3),
     ], align="center"),
     dbc.Row([
         dbc.Col(html.Div(id='output-state')),
@@ -54,17 +61,18 @@ app.layout = dbc.Container([
     # html.Div(id='output-state2'),
     dbc.Row(
         [
-            dbc.Col(dcc.Graph(id="positive-negative-pie"),width=6),
+            dbc.Col(dcc.Graph(id="positive-negative-pie"), width=6),
             dbc.Col(dcc.Graph(id="emotion-pie"), width=6),
         ]
     ),
     dbc.Row(
         [
             dbc.Col(dash_d3cloud.WordCloud(
-            id='wordcloud',
-            words=[{"text" : 'wordcloud', "value" : 20}, {"text" : 'will', "value" : 15}, {"text" : 'appear', "value" : 15}, {"text" : 'here', "value" : 15}],
-            options={"scale" : "log"}
-            ), width=6),        
+                id='wordcloud',
+                words=[{"text": 'wordcloud', "value": 20}, {"text": 'will', "value": 15}, {
+                    "text": 'appear', "value": 15}, {"text": 'here', "value": 15}],
+                options={"scale": "log"}
+            ), width=6),
         ], align="baseline"
     ),
 ])
@@ -83,9 +91,11 @@ def update_output(n_clicks, input1):
     return("Added Tweets to Elastic {}".format(n_clicks))
 
 # Output('output-state2', 'children'),
+
+
 @app.callback(Output('positive-negative-pie', 'figure'),
-                Output('emotion-pie', 'figure'),
-                Output('wordcloud', 'words'),
+              Output('emotion-pie', 'figure'),
+              Output('wordcloud', 'words'),
               Input('analyse-submit', 'n_clicks'),
               State('input-1-state', 'value'))
 def update_output(n_clicks, input1):
@@ -100,15 +110,14 @@ def update_output(n_clicks, input1):
                 }
             }
         },
-        "_source": "tweet.text",
         "aggs": {
             "keywords": {
                 "significant_text": {
-                    "field": "tweet.text", "size": 25
+                    "field": "tweet.text", "size": 50
                 }},
             "keywords2": {
                 "significant_text": {
-                    "field": "tweet.text.keyword", "size": 25
+                    "field": "tweet.text.keyword", "size": 30
                 }
             }
         }}, ignore=[400, 404])
@@ -124,8 +133,9 @@ def update_output(n_clicks, input1):
 
     # Word Cloud Processing
     keywords_wordcloud = []
-    for k, s in zip(keywords,score):
-        keywords_wordcloud.append({"text" : k, "value" : s})
+    for k, s in zip(keywords, score):
+        if k != input1:
+            keywords_wordcloud.append({"text": k, "value": int(s**0.25)+1})
     # keywords_with_counts = Counter(keywords)
     # keywords_wordcloud = [{"text": a, "value":b} for a, b in keywords_with_counts.most_common(100)]
 
@@ -161,9 +171,14 @@ def update_output(n_clicks, input1):
         "POSITIVE": 0,
         "NEGATIVE": 0
     }
+    count = 0
     for i in response.json()["data"][0]:
         sentiment_count[i["label"]] += 1
-    df = pd.DataFrame(np.array([['POSITIVE', sentiment_count['POSITIVE']], ['NEGATIVE', sentiment_count['NEGATIVE']]]), columns=['sentiment', 'count'])
+        es_update(res["hits"]["hits"][count]["_id"], res["hits"]
+                  ["hits"][count]["_source"], i)
+
+    df = pd.DataFrame(np.array([['POSITIVE', sentiment_count['POSITIVE']], [
+                      'NEGATIVE', sentiment_count['NEGATIVE']]]), columns=['sentiment', 'count'])
     print(df)
     pos_neg_pie = px.pie(df, values='count', names='sentiment')
 
@@ -197,13 +212,14 @@ def update_output(n_clicks, input1):
         emotion_count[i["label"]] += 1
 
     emotion_arr = []
-    for k, v in emotion_count.items():  
+    for k, v in emotion_count.items():
         emotion_arr.append([k, v])
     df = pd.DataFrame(np.array(emotion_arr), columns=['emotion', 'count'])
     emotion_pie = px.pie(df, values='count', names='emotion')
     print(emotion_count)
 
     return pos_neg_pie, emotion_pie, keywords_wordcloud
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
