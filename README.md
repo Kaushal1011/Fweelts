@@ -44,3 +44,16 @@ All the above features can be performed separately for tweets containing a parti
 - There's a lot of scope to increase the amount of visualisation that can be done. More data can be fetched from a twitter API and an enhanced schema can be created.
 - Some optimization to improve the working time.
 - Deploying fweelts on the web for everyone to use.
+
+## Setup and usage
+- Run Elastic locally
+- Install requirements
+- Run FastAPI
+```bash
+python3 sentimentserver/main.py
+```
+- Run Dash
+```bash
+python3 app.py
+```
+- Go to `localhost:8050`
